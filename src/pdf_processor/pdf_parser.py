@@ -1,16 +1,16 @@
 """
-PDF处理模块：下载PDF并使用unstructured逐页提取文本
+PDF处理模块：下载PDF并提取文本
 
 特性:
 - 支持本地文件和HTTP(S) URL
 - 下载超时控制和重试机制
-- 完善的错误处理
+- 使用pypdf进行轻量级PDF解析
 """
 import os
 import requests
-from typing import List, Optional
+from typing import List
 from urllib.parse import urlparse
-from unstructured.partition.pdf import partition_pdf
+from pypdf import PdfReader
 
 # 下载配置
 DOWNLOAD_TIMEOUT = 60  # 下载超时(秒)
@@ -101,10 +101,10 @@ class PDFProcessor:
                 print(f"下载失败: {e}，尝试 {attempt + 1}/{MAX_DOWNLOAD_RETRIES}")
 
         raise last_exception or PDFProcessingError("下载失败")
-    
+
     def extract_text_from_pdf(self, pdf_path: str) -> List[dict]:
         """
-        使用unstructured逐页提取PDF文本
+        使用pypdf逐页提取PDF文本
 
         Args:
             pdf_path: PDF文件路径
@@ -127,44 +127,19 @@ class PDFProcessor:
         print(f"正在解析PDF: {pdf_path} ({file_size / 1024 / 1024:.2f} MB)")
 
         try:
-            # 使用unstructured逐页提取
-            # Use "fast" strategy for cloud deployment (no ML dependencies)
-            # Use "hi_res" locally for better table extraction
-            elements = partition_pdf(
-                filename=pdf_path,
-                strategy="fast",  # Fast strategy for cloud (no torch/opencv needed)
-                extract_images_in_pdf=False,  # 不提取图片
-            )
+            reader = PdfReader(pdf_path)
+            pages_text = []
+
+            for page_num, page in enumerate(reader.pages, start=1):
+                text = page.extract_text()
+                if text and text.strip():
+                    pages_text.append({
+                        'page_number': page_num,
+                        'text': text
+                    })
+
         except Exception as e:
             raise PDFProcessingError(f"PDF解析失败: {e}")
-
-        if not elements:
-            raise PDFProcessingError("PDF解析未提取到任何内容")
-
-        # 按页面组织文本
-        pages_text = []
-
-        for element in elements:
-            # 获取元素所在的页码
-            if hasattr(element, 'metadata') and hasattr(element.metadata, 'page_number'):
-                page_number = element.metadata.page_number or 1
-            else:
-                page_number = len(pages_text) + 1 if not pages_text else pages_text[-1]['page_number']
-
-            # 跳过空文本
-            text = getattr(element, 'text', '')
-            if not text or not text.strip():
-                continue
-
-            if page_number > len(pages_text):
-                # 新页面
-                pages_text.append({
-                    'page_number': page_number,
-                    'text': text + '\n'
-                })
-            else:
-                # 追加到当前页面
-                pages_text[page_number - 1]['text'] += text + '\n'
 
         if not pages_text:
             raise PDFProcessingError("PDF解析未提取到有效文本内容")
