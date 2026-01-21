@@ -1,3 +1,15 @@
+---
+title: RAG Document Q&A Assistant
+emoji: 📚
+colorFrom: blue
+colorTo: purple
+sdk: gradio
+sdk_version: 4.0.0
+app_file: app.py
+pinned: false
+license: mit
+---
+
 # RAG Document Q&A Assistant
 
 A **Knowledge-Enhanced RAG** (Retrieval-Augmented Generation) system that lets you chat with your PDF documents. Unlike traditional RAG systems that fail when queries don't match documents, this assistant acts as a conversational AI—using document knowledge when relevant, and general knowledge when not.

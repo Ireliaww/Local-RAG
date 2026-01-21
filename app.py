@@ -246,4 +246,9 @@ with gr.Blocks(title="RAG Document Q&A") as app:
 
 
 if __name__ == "__main__":
-    app.launch(share=False)
+    # For Hugging Face Spaces compatibility
+    app.launch(
+        server_name="0.0.0.0",
+        server_port=7860,
+        share=False
+    )

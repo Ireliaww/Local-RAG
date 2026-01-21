@@ -1,0 +1,6 @@
+tesseract-ocr
+tesseract-ocr-eng
+tesseract-ocr-chi-sim
+poppler-utils
+libgl1-mesa-glx
+libglib2.0-0
