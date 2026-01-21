@@ -149,8 +149,8 @@ def answer_question(question, history, show_debug):
 
         answer = answer + "\n\n" + debug_info
 
-    history.append({"role": "user", "content": question})
-    history.append({"role": "assistant", "content": answer})
+    # Use tuple format for Gradio 4.0 compatibility
+    history.append((question, answer))
     return history, "", debug_info
 
 
