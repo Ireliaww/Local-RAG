@@ -4,7 +4,10 @@
       "Bash(claude auth status:*)",
       "Bash(claude --version:*)",
       "Bash(tree:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }

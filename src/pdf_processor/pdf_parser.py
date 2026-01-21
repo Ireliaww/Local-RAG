@@ -128,10 +128,11 @@ class PDFProcessor:
 
         try:
             # 使用unstructured逐页提取
+            # Use "fast" strategy for cloud deployment (no ML dependencies)
+            # Use "hi_res" locally for better table extraction
             elements = partition_pdf(
                 filename=pdf_path,
-                strategy="hi_res",  # 高分辨率策略，适合财务报表
-                infer_table_structure=True,  # 推断表格结构
+                strategy="fast",  # Fast strategy for cloud (no torch/opencv needed)
                 extract_images_in_pdf=False,  # 不提取图片
             )
         except Exception as e:

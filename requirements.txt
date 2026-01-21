@@ -3,23 +3,21 @@ google-genai>=1.0.0
 chromadb>=0.4.22
 tiktoken>=0.5.2
 unstructured>=0.11.8
-unstructured-inference>=0.7.0  # Required for PDF parsing with unstructured
 langchain-text-splitters>=0.2.0
 
-# PDF processing
+# PDF processing (lightweight)
 pypdf>=3.17.0
 pdf2image>=1.16.3
 pillow>=10.2.0
-pdfminer.six>=20221105  # Required by unstructured for PDF parsing
-pi-heif>=0.16.0  # Required by unstructured for image processing
-unstructured-pytesseract>=0.3.15  # Required for OCR with unstructured
-pytesseract>=0.3.13  # Python wrapper for tesseract OCR engine
+pdfminer.six>=20221105
+pi-heif>=0.16.0
+unstructured-pytesseract>=0.3.15
+pytesseract>=0.3.13
 
 # Web UI
-gradio>=4.0.0
+gradio>=4.44.0
 
 # Utilities
 python-dotenv>=1.0.0
 requests>=2.31.0
-numpy>=1.26.0,<2.0.0  # Pin to NumPy 1.x for compatibility with unstructured and pandas
-pyparsing<3.1.0  # Fix compatibility issue with httplib2
+numpy>=1.26.0
