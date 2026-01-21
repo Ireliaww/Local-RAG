@@ -13,7 +13,9 @@ license: mit
 
 # RAG Document Q&A Assistant
 
-A **Knowledge-Enhanced RAG** (Retrieval-Augmented Generation) system that lets you chat with your PDF documents. Unlike traditional RAG systems that fail when queries don't match documents, this assistant acts as a conversational AI—using document knowledge when relevant, and general knowledge when not.
+**[Live Demo on Hugging Face Spaces](https://huggingface.co/spaces/Ireliaaaaaa/rag-document-qa)**
+
+A **Knowledge-Enhanced RAG** (Retrieval-Augmented Generation) system that lets you chat with your PDF documents. Upload any PDF and ask questions—the assistant uses document knowledge when relevant, and general knowledge when not. Unlike traditional RAG systems that fail when queries don't match documents, this assistant always provides helpful responses.
 
 ## Features
 
