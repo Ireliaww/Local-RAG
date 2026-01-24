@@ -246,6 +246,11 @@ with gr.Blocks(title="RAG Document Q&A") as app:
 
 
 if __name__ == "__main__":
+    print("\n" + "=" * 50)
+    print("Starting RAG Document Q&A Assistant...")
+    print("Open in browser: http://127.0.0.1:7860")
+    print("=" * 50 + "\n")
+
     # For Hugging Face Spaces compatibility
     app.launch(
         server_name="0.0.0.0",
