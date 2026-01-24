@@ -30,12 +30,13 @@ A **Knowledge-Enhanced RAG** (Retrieval-Augmented Generation) system that lets y
 
 | Component | Technology |
 |-----------|------------|
-| **LLM** | Google Gemini (gemini-2.5-flash) |
+| **LLM** | Google Gemini 2.5 Pro |
 | **Embeddings** | Google text-embedding-004 |
 | **Vector Store** | ChromaDB (Cosine Similarity) |
-| **PDF Processing** | Unstructured (hi-res strategy) |
+| **PDF Processing** | pypdf (lightweight) |
 | **Web UI** | Gradio |
 | **Tokenization** | tiktoken (cl100k_base) |
+| **Evaluation** | LLM-as-a-Judge (Gemini 2.5 Flash) |
 
 ## Project Structure
 
@@ -43,8 +44,7 @@ A **Knowledge-Enhanced RAG** (Retrieval-Augmented Generation) system that lets y
 My-LLM-APP/
 ├── app.py                      # Gradio web interface
 ├── main.py                     # CLI entry point
-├── evaluation.py               # Evaluation script (Chinese)
-├── evaluation_en.py            # Evaluation script (English)
+├── run_evaluation.py           # LLM-as-a-Judge evaluation runner
 ├── src/
 │   ├── pdf_processor/          # PDF parsing & text chunking
 │   │   ├── pdf_parser.py       # PDF download and extraction
@@ -54,8 +54,10 @@ My-LLM-APP/
 │   │   └── gemini_embedding.py # Gemini embedding function
 │   ├── rag_qa/                 # Q&A engine
 │   │   └── qa_engine.py        # Knowledge-Enhanced QA
-│   └── indexer/                # Document indexer
-│       └── document_indexer.py # Multi-PDF batch indexing
+│   ├── indexer/                # Document indexer
+│   │   └── document_indexer.py # Multi-PDF batch indexing
+│   └── evaluation/             # Quality evaluation
+│       └── evaluator.py        # LLM-as-a-Judge scoring
 ├── data/
 │   ├── pdfs/                   # PDF storage folder
 │   └── indexed_files.json      # Index tracking (auto-generated)
@@ -172,8 +174,25 @@ python main.py --pdf "data/pdfs/report.pdf" --evaluate
 - `threshold`: 0.6 (similarity threshold for relevance)
 
 ### LLM
-- `model`: gemini-2.5-flash
+- `model`: gemini-2.5-pro
 - `temperature`: 0.7 (for natural conversation)
+
+## Evaluation
+
+The system includes an LLM-as-a-Judge evaluation framework:
+
+```bash
+# Run full evaluation
+python run_evaluation.py
+
+# Quick test (5 questions)
+python run_evaluation.py --quick
+```
+
+Evaluation dimensions:
+- **Faithfulness**: Does the answer follow the retrieved context?
+- **Relevancy**: Does it address the user's question?
+- **Citation Quality**: Are sources cited naturally?
 
 ## Future Improvements
 

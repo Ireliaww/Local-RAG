@@ -1,0 +1,62 @@
+[
+  {
+    "question": "What are the key financial highlights for the most recent quarter?",
+    "category": "financial_metrics",
+    "expected_topics": ["revenue", "profit", "growth"],
+    "requires_context": true
+  },
+  {
+    "question": "How has revenue changed compared to the previous year?",
+    "category": "financial_metrics",
+    "expected_topics": ["revenue", "year-over-year", "growth"],
+    "requires_context": true
+  },
+  {
+    "question": "What are the main risk factors mentioned in the report?",
+    "category": "risk_analysis",
+    "expected_topics": ["risk", "challenges", "concerns"],
+    "requires_context": true
+  },
+  {
+    "question": "What is the company's strategy for growth?",
+    "category": "strategy",
+    "expected_topics": ["strategy", "growth", "plans"],
+    "requires_context": true
+  },
+  {
+    "question": "Hello, how are you?",
+    "category": "casual",
+    "expected_topics": ["greeting"],
+    "requires_context": false
+  },
+  {
+    "question": "What is a balance sheet?",
+    "category": "general_knowledge",
+    "expected_topics": ["balance sheet", "assets", "liabilities"],
+    "requires_context": false
+  },
+  {
+    "question": "What are the operating expenses breakdown?",
+    "category": "financial_metrics",
+    "expected_topics": ["expenses", "costs", "operating"],
+    "requires_context": true
+  },
+  {
+    "question": "Who are the key executives mentioned?",
+    "category": "leadership",
+    "expected_topics": ["executives", "CEO", "management"],
+    "requires_context": true
+  },
+  {
+    "question": "What is the current cash position?",
+    "category": "financial_metrics",
+    "expected_topics": ["cash", "liquidity", "assets"],
+    "requires_context": true
+  },
+  {
+    "question": "Explain the concept of EBITDA.",
+    "category": "general_knowledge",
+    "expected_topics": ["EBITDA", "earnings", "depreciation"],
+    "requires_context": false
+  }
+]

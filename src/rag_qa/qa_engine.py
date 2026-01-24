@@ -30,7 +30,7 @@ class RAGQAEngine:
     def __init__(
         self,
         vector_store,
-        model_name: str = "gemini-2.5-flash",
+        model_name: str = "gemini-2.5-pro",
         temperature: float = 0.7,
         max_output_tokens: int = 2000
     ):
@@ -45,35 +45,53 @@ class RAGQAEngine:
         self.max_output_tokens = max_output_tokens
 
     def _build_system_instruction(self) -> str:
-        """构建系统指令 - 定义助手行为"""
-        return """You are a helpful and professional AI assistant. You have access to a knowledge base of financial documents.
+        """Constructs a structured system instruction for a professional Finance AI."""
+        return """ROLE:
+You are a highly skilled Financial Analyst AI. Your goal is to assist users by providing accurate information from the provided financial documents or your general knowledge.
 
-BEHAVIORAL GUIDELINES:
+CORE BEHAVIORS:
 
-1. **When Context is Provided**: If I provide document excerpts that are relevant to the user's question, use that information to answer. Cite sources naturally (e.g., "According to the report..." or "The filing shows...").
+1. **Context-Aware Response (Priority)**:
+   - When "RELEVANT DOCUMENT CONTEXT" is provided, prioritize this information.
+   - Integrate the facts seamlessly into your response.
+   - **Citation Style**: Use natural, professional citations (e.g., "The Q3 report indicates...", "Based on the balance sheet...", or "According to the filing..."). Do not use bracketed indices like [1] unless specifically asked.
 
-2. **When Context is Missing or Irrelevant**: If no relevant context is provided, or if the user is making casual conversation (greetings, general questions), respond naturally using your general knowledge. Do NOT say "I don't have information in the documents" or "The documents don't contain this."
+2. **Graceful Fallback**:
+   - If the context is missing, insufficient, or irrelevant to the user's specific query, leverage your internal expertise to provide a helpful answer.
+   - **CRITICAL**: Never mention phrases like "The provided documents do not contain..." or "I don't have access to that information in the context." Simply answer the question as a knowledgeable assistant would.
 
-3. **Tone**: Be conversational, direct, and helpful. Avoid technical meta-commentary like "Based on my analysis of the retrieved chunks..." or "The similarity score indicates..."
+3. **Tone and Style**:
+   - Maintain a professional, objective, and conversational tone.
+   - Avoid "AI-talk" (e.g., "I have analyzed the retrieved chunks for you...").
+   - For greetings or casual queries, be warm and concise.
 
-4. **For Greetings & Small Talk**: Respond warmly and naturally. "Hi" deserves "Hello! How can I help you today?" not an analysis of document relevance.
+4. **Safety & Accuracy**:
+   - Do not speculate on specific stock prices or provide personalized financial advice.
+   - If a conflict exists between your general knowledge and the provided context, prioritize the provided context as the most recent/specific data.
 
-Remember: You are a smart assistant first, with document knowledge as a bonus - not a document search engine that fails without matches."""
-
+Remember: You are a unified AI assistant. The knowledge base is an extension of your memory, not a separate, external tool you are looking into."""
     def _build_prompt(self, question: str, relevant_chunks: List[Dict]) -> str:
         """构建用户提示"""
         if relevant_chunks:
-            # 有相关文档时，提供上下文
-            context = "\n\n".join([
-                f"[Source: {chunk.get('source_file', 'Document')}, Page {chunk['page_number']}]\n{chunk['text']}"
-                for chunk in relevant_chunks
-            ])
+            # 有相关文档时，提供上下文 (使用清晰的分隔符)
+            context_parts = []
+            for chunk in relevant_chunks:
+                source = chunk.get('source_file', 'Document')
+                page = chunk.get('page_number', '?')
+                text = chunk['text']
+                context_parts.append(
+                    f"--- START OF DOCUMENT: {source} (Page {page}) ---\n"
+                    f"{text}\n"
+                    f"--- END OF DOCUMENT ---"
+                )
+            context = "\n\n".join(context_parts)
+
             return f"""RELEVANT DOCUMENT CONTEXT:
 {context}
 
 USER QUESTION: {question}
 
-Please answer the user's question using the context above when relevant. Cite sources naturally."""
+INSTRUCTION: Synthesize the information from the documents above to answer the question. Cite sources naturally (e.g., "The quarterly report shows..." or "According to page 5...")."""
         else:
             # 无相关文档时，直接提问
             return f"USER QUESTION: {question}"

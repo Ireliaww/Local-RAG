@@ -26,6 +26,13 @@ chroma_db/
 data/pdfs/*.pdf
 !data/pdfs/.gitkeep
 
+# Generated files
+data/indexed_files.json
+evaluation_results/
+
+# Local docs
+guidance.md
+
 # IDE
 .vscode/
 .idea/
