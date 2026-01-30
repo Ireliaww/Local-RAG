@@ -15,16 +15,25 @@ license: mit
 
 **[Live Demo on Hugging Face Spaces](https://huggingface.co/spaces/Ireliaaaaaa/rag-document-qa)**
 
-A **Knowledge-Enhanced RAG** (Retrieval-Augmented Generation) system that lets you chat with your PDF documents. Upload any PDF and ask questions—the assistant uses document knowledge when relevant, and general knowledge when not. Unlike traditional RAG systems that fail when queries don't match documents, this assistant always provides helpful responses.
+An **intelligent RAG** (Retrieval-Augmented Generation) system with **hallucination detection** and **smart question classification**. Upload PDF documents and ask questions naturally—the system automatically distinguishes between casual conversation and document queries, provides cited answers when documents are available, and explicitly states when information isn't found instead of hallucinating.
+
+**Key Innovation**: Intelligent question classification ensures casual greetings get natural responses while document queries require actual document support, dramatically reducing hallucination risk.
 
 ## Features
 
-- **Multi-PDF Support** - Index multiple documents from a folder with incremental indexing
-- **Knowledge-Enhanced Mode** - Always responds helpfully; uses documents when relevant, general knowledge otherwise
-- **Web Chat Interface** - Clean Gradio UI with conversation history
-- **Document Management** - Upload, index, and manage PDFs through the UI
-- **Debug Mode** - Optional display of similarity scores and source chunks
-- **Source Tracking** - Tracks which document and page each answer comes from
+### 🎯 Core Capabilities
+- **🧠 Hallucination Detection** - Automatically distinguishes casual chat from document queries; returns "not found" instead of hallucinating answers
+- **🔍 Intelligent Question Classification** - Uses gemini-2.5-flash to classify questions as CASUAL or DOCUMENT_QUERY
+- **💬 Conversation Memory** - Maintains context across multiple turns for coherent multi-turn dialogue
+- **📚 Multi-PDF Support** - Index multiple documents with incremental indexing
+- **📊 Source Citations** - Tracks and displays which document and page each answer comes from
+
+### 🚀 Advanced Features  
+- **Smart Response Strategy** - Casual questions (greetings, "who are you") get natural responses; document queries require actual document evidence
+- **Similarity Threshold Filtering** - Only uses documents above 0.6 similarity score, preventing weak matches
+- **Optional Hallucination Validation** - LLM-based fact-checking to verify answers match retrieved documents
+- **Debug Mode** - Shows question classification, similarity scores, and retrieval details
+- **Web Chat Interface** - Clean Gradio UI with real-time status updates
 
 ## Tech Stack
 
@@ -53,17 +62,22 @@ My-LLM-APP/
 │   │   ├── chroma_store.py     # ChromaDB operations
 │   │   └── gemini_embedding.py # Gemini embedding function
 │   ├── rag_qa/                 # Q&A engine
-│   │   └── qa_engine.py        # Knowledge-Enhanced QA
+│   │   └── qa_engine.py        # ⭐ Intelligent QA with hallucination detection
 │   ├── indexer/                # Document indexer
 │   │   └── document_indexer.py # Multi-PDF batch indexing
 │   └── evaluation/             # Quality evaluation
 │       └── evaluator.py        # LLM-as-a-Judge scoring
+├── tests/                      # Test scripts
+│   ├── test_hallucination.py   # Hallucination detection tests
+│   └── test_classification_quick.py # Question classification tests
 ├── data/
 │   ├── pdfs/                   # PDF storage folder
 │   └── indexed_files.json      # Index tracking (auto-generated)
 ├── chroma_db/                  # Vector database (auto-generated)
 ├── requirements.txt            # Dependencies
 ├── .env.example                # Environment variables template
+├── HALLUCINATION_DETECTION_README.md      # 中文使用指南
+├── HALLUCINATION_DETECTION_WALKTHROUGH.md # Technical walkthrough
 └── README.md
 ```
 
@@ -116,9 +130,18 @@ python app.py
 ```
 
 Features:
-- **Chat Tab**: Conversational Q&A with your documents
+- **Chat Tab**: Conversational Q&A with intelligent question classification
+  - Casual questions (greetings) get natural responses
+  - Document queries return cited answers or explicit "not found" messages
+  - Conversation memory for multi-turn dialogue
 - **Manage Documents Tab**: Upload, index, and manage PDFs
-- **Debug Mode**: Toggle to see retrieval details and similarity scores
+- **Debug Mode**: Toggle "Show technical details" to see:
+  - Question classification (💬 CASUAL or 📊 DOCUMENT_QUERY)
+  - Similarity scores for retrieved documents
+  - Number of relevant chunks
+  - Hallucination check status
+
+**Tip**: Enable debug mode to understand how the system classifies your questions and retrieves information!
 
 ### Command Line Interface
 
@@ -133,49 +156,105 @@ python main.py --pdf "data/pdfs/report.pdf" --question "What is the total revenu
 python main.py --pdf "data/pdfs/report.pdf" --evaluate
 ```
 
+### Testing Hallucination Detection
+
+Run comprehensive tests with NVIDIA financial reports (or your own documents):
+
+```bash
+python tests/test_hallucination.py
+```
+
+This tests:
+- ✅ Casual question classification
+- ✅ Document query classification  
+- ✅ "Not found" responses for unanswerable questions
+- ✅ Cited answers for document-based questions
+
+
 ## How It Works
 
-```
-┌─────────────┐     ┌──────────────┐     ┌─────────────┐
-│  User Query │────▶│   Retrieve   │────▶│   Filter    │
-└─────────────┘     │  Top-K Docs  │     │ by Threshold│
-                    └──────────────┘     └──────┬──────┘
-                                                │
-                    ┌──────────────┐            │
-                    │   Generate   │◀───────────┘
-                    │   Response   │
-                    └──────┬───────┘
-                           │
-           ┌───────────────┴───────────────┐
-           │                               │
-    ┌──────▼──────┐                ┌───────▼───────┐
-    │  Relevant   │                │  No Relevant  │
-    │  Docs Found │                │  Docs Found   │
-    └──────┬──────┘                └───────┬───────┘
-           │                               │
-    ┌──────▼──────┐                ┌───────▼───────┐
-    │ Answer with │                │  Answer with  │
-    │  Citations  │                │General Knowledge│
-    └─────────────┘                └───────────────┘
+### Intelligent Question Classification & Response Flow
+
+```mermaid
+graph TD
+    A[User Question] --> B{Classify Question<br/>gemini-2.5-flash}
+    B -->|CASUAL<br/>greeting, chitchat| C[Generate Natural Response]
+    B -->|DOCUMENT_QUERY<br/>requires facts| D[Retrieve Top-K Documents]
+    
+    D --> E{Filter by Similarity<br/>threshold ≥ 0.6}
+    E -->|No Relevant Docs| F[Return 'Not Found' Message]
+    E -->|Relevant Docs Found| G[Generate Document-Based Answer]
+    
+    G --> H{Hallucination Check<br/>Enabled?}
+    H -->|No| I[Return Answer with Citations]
+    H -->|Yes| J{Fact-Check:<br/>Answer matches docs?}
+    J -->|Yes| I
+    J -->|No| F
+    
+    C --> K[User receives response]
+    I --> K
+    F --> K
 ```
 
-**Key Difference from Traditional RAG:**
-- Traditional RAG: "I don't have information about that in the documents."
-- Knowledge-Enhanced RAG: Provides helpful response using general knowledge, clearly indicating when information isn't from documents.
+### Example Scenarios
+
+**Scenario 1: Casual Greeting**
+```
+User: "Hello!"
+Classification: CASUAL
+Response: Natural greeting without document lookup
+```
+
+**Scenario 2: Document Query with Answer**
+```
+User: "What was NVIDIA's Q3 revenue?"
+Classification: DOCUMENT_QUERY
+Retrieval: 3 relevant chunks (similarity > 0.6)
+Response: "Based on financial statements, NVIDIA's Q3 revenue was $30.04B"
+          Sources: NVIDIA_Q3_2024.pdf (Page 5)
+```
+
+**Scenario 3: Document Query without Answer**
+```
+User: "What is the CEO's favorite color?"
+Classification: DOCUMENT_QUERY
+Retrieval: 0 relevant chunks (max similarity 0.42)
+Response: "I apologize, but I couldn't find relevant information about 
+          this in the available documents."
+```
+
+**Key Differences from Traditional RAG:**
+
+| Approach | Casual Questions | Document Queries (No Match) |
+|----------|------------------|----------------------------|
+| **Traditional RAG** | ❌ "I don't have that info" | ❌ Hallucinates or refuses |
+| **This System** | ✅ Natural conversation | ✅ Explicit "not found" message |
 
 ## Configuration
+
+### Question Classification
+- Classification Model: `gemini-2.5-flash` (fast, no thinking mode overhead)
+- Question Types: `CASUAL` or `DOCUMENT_QUERY`
 
 ### Text Chunking
 - `min_tokens`: 300
 - `max_tokens`: 500
+- Tokenizer: tiktoken (cl100k_base)
 
 ### Retrieval
 - `k`: 5 (top-k documents to retrieve)
 - `threshold`: 0.6 (similarity threshold for relevance)
+- Only chunks with similarity ≥ 0.6 are considered "relevant"
 
 ### LLM
-- `model`: gemini-2.5-pro
-- `temperature`: 0.7 (for natural conversation)
+- Main Model: `gemini-2.5-pro` (for answer generation)
+- Classification Model: `gemini-2.5-flash` (for question classification)
+- `temperature`: 0.1 (for factual responses)
+
+### Hallucination Detection
+- `ENABLE_HALLUCINATION_CHECK`: `False` (disabled by default)
+- When enabled: Adds LLM-based fact-checking to verify answers match retrieved documents
+- Location: `src/rag_qa/qa_engine.py`
 
 ## Evaluation
 
@@ -197,18 +276,19 @@ Evaluation dimensions:
 ## Future Improvements
 
 ### Planned Features
-- [ ] **Conversation Memory** - Context across multiple turns
-- [ ] **Streaming Responses** - Real-time token streaming
-- [ ] **More File Types** - Word, TXT, Markdown support
-- [ ] **REST API** - FastAPI endpoint for integration
+- [ ] **Streaming Responses** - Real-time token streaming for faster perceived response time
+- [ ] **More File Types** - Word (.docx), TXT, Markdown support
+- [ ] **REST API** - FastAPI endpoint for programmatic integration
 - [ ] **Chat Export** - Save conversations as JSON/PDF
+- [ ] **Advanced Hallucination Metrics** - Quantitative scoring of answer quality vs. document content
 
 ### Long-term Goals
-- [ ] Cloud deployment (Google Cloud Run)
+- [ ] Cloud deployment (Google Cloud Run or Hugging Face Spaces)
 - [ ] User authentication & multi-tenancy
-- [ ] Hybrid search (vector + keyword)
-- [ ] Multi-language support
-- [ ] Analytics dashboard
+- [ ] Hybrid search (vector + keyword BM25)
+- [ ] Multi-language support (answer in user's language)
+- [ ] Analytics dashboard (query patterns, retrieval success rate)
+- [ ] Fine-tuned embedding model for domain-specific documents
 
 ## Troubleshooting
 
