@@ -93,15 +93,37 @@ Remember: You are a unified AI assistant. The knowledge base is an extension of 
             question: User's question
             
         Returns:
-            "CASUAL" - for greetings, chitchat, questions about the AI itself
-            "DOCUMENT_QUERY" - for questions requiring document lookup
+            "CASUAL" - for greetings, chitchat, questions about the AI itself, and general knowledge
+            "DOCUMENT_QUERY" - for questions requiring specific document lookup
         """
-        # Simplified prompt to avoid triggering thinking mode
-        classification_prompt = f"""Is this casual chat or a document query?
+        # Smart classification: general knowledge is CASUAL, document-specific is DOCUMENT_QUERY
+        classification_prompt = f"""Classify this question as CASUAL or DOCUMENT_QUERY.
 
-"{question}"
+CASUAL - Use for:
+1. Greetings: "Hello", "Hi", "Good morning"
+2. Questions about the AI: "Who are you?", "What can you do?"
+3. Chitchat: "How are you?", "Tell me a joke"
+4. **General knowledge questions** that can be answered from world knowledge:
+   - "What is quantum computing?"
+   - "How tall is the Eiffel Tower?"
+   - "When was Apple founded?"
+   - "What are some best practices for X?"
+   - General definitions, historical facts, common knowledge
 
-Reply ONE WORD: CASUAL or DOCUMENT_QUERY"""
+DOCUMENT_QUERY - Use for questions containing financial/business document keywords OR asking for specific data:
+- **Financial document keywords**: balance sheet, income statement, cash flow, earnings report, 10-K, 10-Q, fiscal year, Q1/Q2/Q3/Q4
+- Questions about **specific companies/organizations** with financial data
+- Questions asking for **specific numbers, data, metrics** (revenue, profit, expenses, etc.)
+- Questions about uploaded document content
+
+Question: "{question}"
+
+Think: 
+- Does it contain financial document keywords (balance sheet, earnings, etc.)? → DOCUMENT_QUERY
+- Is it asking for specific company data or numbers? → DOCUMENT_QUERY
+- Is it asking for general world knowledge? → CASUAL
+
+Answer with ONE WORD: CASUAL or DOCUMENT_QUERY"""
 
         try:
             # Use gemini-2.5-flash for faster classification without thinking mode
